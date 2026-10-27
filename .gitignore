@@ -1,0 +1,21 @@
+# Python Virtual Environment
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE and OS
+.DS_Store
+.idea/
+.vscode/
+
+# Temporary caches
+/tmp/matplotlib/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Processed intermediate data (can be regenerated)
+data/processed/

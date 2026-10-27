@@ -1,0 +1,76 @@
+{
+  "audit_timestamp": "2026-10-28T02:22:43.792465",
+  "dataset_name": "Depresjon",
+  "counts": {
+    "total_participants": 55,
+    "condition_count": 23,
+    "control_count": 32,
+    "scores_count": 55,
+    "total_observations": 1571706
+  },
+  "integrity_checks": {
+    "all_scores_cols_match": true,
+    "missing_in_scores": [],
+    "missing_in_files": [],
+    "all_schemas_valid": true,
+    "all_chronologically_sorted": true,
+    "any_duplicate_timestamps": false,
+    "any_negative_activity": false,
+    "participants_with_irregular_intervals": 5,
+    "total_irregular_intervals": 5
+  },
+  "observation_stats": {
+    "min_rows_per_participant": 19299,
+    "max_rows_per_participant": 65407,
+    "mean_rows_per_participant": 28576.5,
+    "median_rows_per_participant": 23244.0
+  },
+  "duration_stats_days": {
+    "min_duration": 13.401,
+    "max_duration": 45.421,
+    "mean_duration": 19.85
+  },
+  "activity_stats": {
+    "condition_mean_activity": 163.72,
+    "control_mean_activity": 208.65,
+    "condition_zero_ratio_mean": 0.4362,
+    "control_zero_ratio_mean": 0.3811
+  },
+  "irregular_participants": [
+    {
+      "participant_id": "control_1",
+      "group": "control",
+      "irregular_intervals": 1,
+      "max_gap": "0 days 01:01:00",
+      "missing_minutes": 60
+    },
+    {
+      "participant_id": "control_31",
+      "group": "control",
+      "irregular_intervals": 1,
+      "max_gap": "0 days 01:01:00",
+      "missing_minutes": 60
+    },
+    {
+      "participant_id": "control_32",
+      "group": "control",
+      "irregular_intervals": 1,
+      "max_gap": "0 days 01:01:00",
+      "missing_minutes": 60
+    },
+    {
+      "participant_id": "control_6",
+      "group": "control",
+      "irregular_intervals": 1,
+      "max_gap": "0 days 01:01:00",
+      "missing_minutes": 60
+    },
+    {
+      "participant_id": "control_7",
+      "group": "control",
+      "irregular_intervals": 1,
+      "max_gap": "0 days 01:01:00",
+      "missing_minutes": 60
+    }
+  ]
+}

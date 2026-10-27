@@ -1,0 +1,35 @@
+# Data and Preprocessing Configuration for Actigraphy Depression Detection
+
+dataset:
+  name: "Depresjon"
+  raw_dir: "data"
+  scores_file: "data/scores.csv"
+  condition_dir: "data/condition"
+  control_dir: "data/control"
+  cache_dir: "data/processed"
+
+labels:
+  positive_class: "condition" # 1 = depressed (condition)
+  negative_class: "control"   # 0 = healthy control (control)
+  mapping:
+    condition: 1
+    control: 0
+
+windowing:
+  resolution_minutes: 1
+  window_length_minutes: 1440 # 24 hours
+  window_hop_minutes: 720      # 12 hours (50% overlap)
+  samples_per_window: 1440
+  use_scores_days_limit: false # Set true to truncate to days in scores.csv, false for full recording
+  max_missing_ratio_per_window: 0.05 # Exclude windows with > 5% missing or interpolated minutes
+
+missing_data_policy:
+  short_gap_threshold_minutes: 65 # Gaps <= 65 mins (e.g. 60-min DST clock change) can be linear/forward interpolated
+  long_gap_action: "split"       # Long gaps split sequence into continuous recording segments
+  distinguish_zero_and_missing: true
+
+validation:
+  cv_type: "stratified_group_kfold" # or "loso" (leave-one-subject-out)
+  n_outer_splits: 5
+  n_inner_splits: 4
+  random_state: 42
