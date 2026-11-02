@@ -1,5 +1,5 @@
 {
-  "audit_timestamp": "2026-10-28T02:22:43.792465",
+  "audit_timestamp": "2026-10-31T22:11:57.407616",
   "dataset_name": "Depresjon",
   "counts": {
     "total_participants": 55,
@@ -45,20 +45,6 @@
       "missing_minutes": 60
     },
     {
-      "participant_id": "control_31",
-      "group": "control",
-      "irregular_intervals": 1,
-      "max_gap": "0 days 01:01:00",
-      "missing_minutes": 60
-    },
-    {
-      "participant_id": "control_32",
-      "group": "control",
-      "irregular_intervals": 1,
-      "max_gap": "0 days 01:01:00",
-      "missing_minutes": 60
-    },
-    {
       "participant_id": "control_6",
       "group": "control",
       "irregular_intervals": 1,
@@ -67,6 +53,20 @@
     },
     {
       "participant_id": "control_7",
+      "group": "control",
+      "irregular_intervals": 1,
+      "max_gap": "0 days 01:01:00",
+      "missing_minutes": 60
+    },
+    {
+      "participant_id": "control_31",
+      "group": "control",
+      "irregular_intervals": 1,
+      "max_gap": "0 days 01:01:00",
+      "missing_minutes": 60
+    },
+    {
+      "participant_id": "control_32",
       "group": "control",
       "irregular_intervals": 1,
       "max_gap": "0 days 01:01:00",

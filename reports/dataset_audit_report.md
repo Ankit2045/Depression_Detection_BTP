@@ -1,5 +1,5 @@
 # Depresjon Dataset Audit Report
-**Audit Execution Timestamp:** `2026-10-28T02:22:43.792465`
+**Audit Execution Timestamp:** `2026-10-31T22:11:57.407616`
 
 ## 1. Executive Summary
 - **Dataset Name:** Depresjon
@@ -34,10 +34,10 @@ Only **5 out of 55 participants** present irregular timestamp intervals, each co
 | Participant ID | Group | Row Count | Gap Interval | Missing Minutes | Verified Cause |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `control_1` | control | 51,611 | `2003-03-30 01:59:00` → `03:00:00` | 60 | Daylight Saving Time transition (spring forward) |
-| `control_31` | control | 51,389 | `2003-03-30 01:59:00` → `03:00:00` | 60 | Daylight Saving Time transition (spring forward) |
-| `control_32` | control | 51,619 | `2003-03-30 01:59:00` → `03:00:00` | 60 | Daylight Saving Time transition (spring forward) |
 | `control_6` | control | 51,589 | `2003-03-30 01:59:00` → `03:00:00` | 60 | Daylight Saving Time transition (spring forward) |
 | `control_7` | control | 51,490 | `2003-03-30 01:59:00` → `03:00:00` | 60 | Daylight Saving Time transition (spring forward) |
+| `control_31` | control | 51,389 | `2003-03-30 01:59:00` → `03:00:00` | 60 | Daylight Saving Time transition (spring forward) |
+| `control_32` | control | 51,619 | `2003-03-30 01:59:00` → `03:00:00` | 60 | Daylight Saving Time transition (spring forward) |
 
 > [!NOTE]
 > All 5 occurrences match the exact European Daylight Saving Time switch on Sunday, March 30, 2003, at 02:00 CET. There are zero unexplainable missing intervals, dropped packets, or arbitrary hardware downtime in the raw dataset.

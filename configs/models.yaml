@@ -1,0 +1,57 @@
+# Model Architecture and Training Configurations
+
+deep_learning:
+  input_resolution: "hourly" # "hourly" (24 timesteps) or "minute" (1440 timesteps)
+  sequence_length_hourly: 24
+  sequence_length_minute: 1440
+  in_channels: 1
+  num_classes: 1 # Binary classification (logits output)
+
+  training:
+    batch_size: 32
+    max_epochs: 50
+    learning_rate: 0.001
+    weight_decay: 0.0001
+    optimizer: "adam"
+    criterion: "bce_with_logits"
+    early_stopping_patience: 7
+    early_stopping_metric: "val_balanced_accuracy"
+    device: "mps" # Will automatically fall back to "cpu" if unavailable
+    random_seed: 42
+
+  lstm:
+    hidden_dim: 64
+    num_layers: 2
+    dropout: 0.2
+    bidirectional: false
+
+  gru:
+    hidden_dim: 64
+    num_layers: 2
+    dropout: 0.2
+    bidirectional: false
+
+  cnn1d:
+    num_filters: [32, 64]
+    kernel_sizes: [3, 3]
+    pool_size: 2
+    dropout: 0.2
+    fc_dim: 32
+
+  hybrid_cnn_gru:
+    cnn_filters: 32
+    kernel_size: 3
+    gru_hidden_dim: 32
+    gru_layers: 1
+    dropout: 0.2
+
+statistical:
+  classifiers:
+    - "logistic_regression"
+    - "linear_svm"
+    - "rbf_svm"
+    - "random_forest"
+  feature_sets:
+    - "baseline_3"
+    - "all_21"
+  random_state: 42

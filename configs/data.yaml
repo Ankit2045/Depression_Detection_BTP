@@ -1,4 +1,4 @@
-# Data and Preprocessing Configuration for Actigraphy Depression Detection
+# Data, Windowing, and Evaluation Configuration for Actigraphy Depression Detection
 
 dataset:
   name: "Depresjon"
@@ -15,21 +15,33 @@ labels:
     condition: 1
     control: 0
 
-windowing:
-  resolution_minutes: 1
-  window_length_minutes: 1440 # 24 hours
-  window_hop_minutes: 720      # 12 hours (50% overlap)
-  samples_per_window: 1440
-  use_scores_days_limit: false # Set true to truncate to days in scores.csv, false for full recording
-  max_missing_ratio_per_window: 0.05 # Exclude windows with > 5% missing or interpolated minutes
+# Recording Duration Policy:
+# - "scores_days": Truncate participant records to the first N days specified in scores.csv (Option B)
+# - "full_series": Retain all days recorded in raw CSVs (Option A)
+recording_duration_scope: "scores_days"
+
+# Temporal Resolution Policy:
+# - "hourly": 1-hour downsampled averages (24 steps/window, hop 12 steps = 12h) [Initial phase]
+# - "minute": 1-minute resolution (1440 steps/window, hop 720 steps = 12h)   [Subsequent comparison]
+active_resolution: "hourly"
+
+hourly_config:
+  resample_rule: "1h"
+  aggregation: "mean"
+  window_size: 24   # 24 hours of hourly averages
+  window_hop: 12    # 12 hours hop (50% overlap)
+
+minute_config:
+  resample_rule: "1min"
+  window_size: 1440 # 1440 minutes = 24 hours
+  window_hop: 720   # 720 minutes = 12 hours
 
 missing_data_policy:
-  short_gap_threshold_minutes: 65 # Gaps <= 65 mins (e.g. 60-min DST clock change) can be linear/forward interpolated
-  long_gap_action: "split"       # Long gaps split sequence into continuous recording segments
+  short_gap_threshold_minutes: 65 # Gaps <= 65 mins (e.g., 60-min DST clock change) are linearly interpolated
+  max_missing_ratio_per_window: 0.05 # Exclude windows where > 5% points were imputed or missing
   distinguish_zero_and_missing: true
 
 validation:
-  cv_type: "stratified_group_kfold" # or "loso" (leave-one-subject-out)
-  n_outer_splits: 5
-  n_inner_splits: 4
+  cv_type: "loso" # Leave-One-Subject-Out (55 outer folds, 1 subject test per fold)
+  inner_folds: 5  # 5-fold stratified group cross-validation on the 54 training subjects for tuning
   random_state: 42

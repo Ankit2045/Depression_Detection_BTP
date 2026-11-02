@@ -1,0 +1,4 @@
+model,TP,TN,FP,FN
+Statistical Alone (3),364,632,140,195
+LSTM Alone (256),557,769,3,2
+Hybrid LSTM-SVM (Arora et al.),557,769,3,2

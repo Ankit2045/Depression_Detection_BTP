@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity Clinical AI Co-Pilot | DTU BTP GP178</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --sidebar-width: 320px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* Sidebar */
+    #sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--card-bg);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .sidebar-header {
+      padding: 18px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .sidebar-header h2 { font-size: 1.1rem; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    .sidebar-header p { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    .search-box {
+      margin-top: 12px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    .filter-pills { display: flex; gap: 6px; margin-top: 10px; }
+    .pill {
+      font-size: 0.72rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #0f172a;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+    }
+    .pill.active { background: var(--primary); color: #0f172a; font-weight: bold; }
+
+    .btn-new-patient {
+      width: 100%;
+      margin-top: 12px;
+      padding: 9px 12px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #0f172a;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
+    .btn-new-patient:hover { opacity: 0.9; }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      width: 520px;
+      max-width: 95vw;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .modal-header h3 { font-size: 1.15rem; color: var(--primary); }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+    .modal-close:hover { color: var(--text); }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--text-muted);
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    .drop-zone {
+      border: 2px dashed var(--card-border);
+      border-radius: 8px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      background: #0f172a;
+      transition: all 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--primary);
+      background: #13213a;
+    }
+    .drop-zone p { font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; }
+    .quick-sample-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-sample {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 0.74rem;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-sample:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+    }
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-submit {
+      background: var(--primary);
+      color: #0f172a;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: opacity 0.2s;
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .status-msg {
+      font-size: 0.8rem;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      display: none;
+    }
+    .status-msg.info { display: block; background: rgba(56, 189, 248, 0.15); color: var(--primary); border: 1px solid var(--primary); }
+    .status-msg.error { display: block; background: rgba(244, 63, 94, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+
+    #patient-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .patient-item {
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      background: #0f172a;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .patient-item:hover { border-color: var(--primary); background: #13213a; }
+    .patient-item.selected { border-color: var(--primary); background: #1a3258; }
+    .patient-item .p-id { font-weight: 600; font-size: 0.88rem; }
+    .patient-item .p-sub { font-size: 0.72rem; color: var(--text-muted); }
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 7px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .badge-high { background: rgba(244, 63, 94, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .badge-mod { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+    .badge-low { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+
+    /* Main Workspace */
+    #main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      height: 100vh;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      padding: 16px 24px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top-title h1 { font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .top-title span { font-size: 0.8rem; color: var(--text-muted); }
+    .top-stats { display: flex; gap: 16px; }
+    .stat-pill {
+      background: #0f172a;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      font-size: 0.8rem;
+    }
+    .stat-pill strong { color: var(--primary); font-size: 0.92rem; }
+
+    /* Dashboard View */
+    .dashboard-container {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Patient Banner */
+    .patient-banner {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .banner-info h2 { font-size: 1.4rem; color: var(--text); }
+    .banner-meta { display: flex; gap: 14px; margin-top: 6px; font-size: 0.85rem; color: var(--text-muted); }
+    .banner-risk {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .risk-score { font-size: 1.8rem; font-weight: 800; }
+
+    /* Grid Row */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 18px;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title .sub { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; }
+
+    /* Biomarker Metrics Grid */
+    .biomarker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .bio-box {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 12px;
+    }
+    .bio-name { font-size: 0.75rem; color: var(--text-muted); }
+    .bio-val { font-size: 1.25rem; font-weight: 700; margin: 4px 0; color: var(--text); }
+    .bio-dev { font-size: 0.72rem; }
+    .dev-bad { color: var(--danger); }
+    .dev-good { color: var(--success); }
+
+    /* Memo Box */
+    .memo-content {
+      background: #0b1120;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 20px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.83rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      max-height: 480px;
+      overflow-y: auto;
+    }
+    .btn-action {
+      background: var(--primary);
+      color: #0f172a;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background 0.2s;
+    }
+    .btn-action:hover { background: var(--primary-hover); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h2>🧠 Clinical AI Co-Pilot</h2>
+      <p>DTU Final Year Project (GP178) | Actigraphy</p>
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Search participant (e.g. condition_1)...">
+      </div>
+      <div class="filter-pills">
+        <div class="pill active" onclick="filterCohort('all', this)">All (55)</div>
+        <div class="pill" onclick="filterCohort('condition', this)">Condition (23)</div>
+        <div class="pill" onclick="filterCohort('control', this)">Control (32)</div>
+      </div>
+      <button class="btn-new-patient" onclick="openUploadModal()">➕ Test New Patient Data</button>
+    </div>
+    <div id="patient-list">
+      <!-- Injected via JavaScript -->
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main id="main-content">
+    <header class="top-bar">
+      <div class="top-title">
+        <h1>Psychiatric Clinical Decision Support System</h1>
+        <span>Multimodal Feature Fusion & Temporal Transformer Architecture</span>
+      </div>
+      <div class="top-stats">
+        <div class="stat-pill">55-Fold LOSO Accuracy: <strong>92.73% (51/55)</strong></div>
+        <div class="stat-pill">ROC-AUC: <strong>0.9470</strong></div>
+        <div class="stat-pill">Sensitivity: <strong>91.30%</strong></div>
+      </div>
+    </header>
+
+    <div class="dashboard-container">
+      <!-- Patient Banner -->
+      <section class="patient-banner">
+        <div class="banner-info">
+          <h2 id="disp-patient-id">Select a Patient</h2>
+          <div class="banner-meta">
+            <span id="disp-cohort">Cohort: —</span>
+            <span id="disp-age">Age: —</span>
+            <span id="disp-gender">Gender: —</span>
+            <span id="disp-madrs">MADRS Score: —</span>
+          </div>
+        </div>
+        <div class="banner-risk">
+          <div id="disp-risk-badge" class="badge badge-high">—</div>
+          <div id="disp-prob" class="risk-score">—%</div>
+          <span style="font-size:0.75rem; color:var(--text-muted)">Multimodal AI Probability</span>
+        </div>
+      </section>
+
+      <!-- Digital Biomarker Metric Cards -->
+      <section class="biomarker-grid">
+        <div class="bio-box">
+          <div class="bio-name">Daytime Sedentary Ratio (Rank #1)</div>
+          <div id="disp-sed-val" class="bio-val">—%</div>
+          <div id="disp-sed-dev" class="bio-dev">—</div>
+        </div>
+        <div class="bio-box">
+          <div class="bio-name">M10 Daytime Peak Vigor (Rank #3)</div>
+          <div id="disp-m10-val" class="bio-val">—</div>
+          <div id="disp-m10-dev" class="bio-dev">—</div>
+        </div>
+        <div class="bio-box">
+          <div class="bio-name">Median Motor Activity (Rank #4)</div>
+          <div id="disp-med-val" class="bio-val">— counts/min</div>
+          <div id="disp-med-dev" class="bio-dev">—</div>
+        </div>
+        <div class="bio-box">
+          <div class="bio-name">Nocturnal Mean Activity (Rank #2)</div>
+          <div id="disp-noct-val" class="bio-val">— counts/min</div>
+          <div id="disp-noct-dev" class="bio-dev">—</div>
+        </div>
+      </section>
+
+      <!-- Charts Row -->
+      <section class="charts-grid">
+        <!-- 24-Hour Waveform Chart -->
+        <div class="card">
+          <div class="card-title">
+            <span>24-Hour Diurnal Motor Activity Waveform</span>
+            <span class="sub">Patient Recording vs. Healthy Control Baseline</span>
+          </div>
+          <div style="height: 250px;">
+            <canvas id="waveformChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Transformer Attention Weights -->
+        <div class="card">
+          <div class="card-title">
+            <span>Temporal Transformer Self-Attention</span>
+            <span class="sub">Hourly Salience Weight (%)</span>
+          </div>
+          <div style="height: 250px;">
+            <canvas id="attentionChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Generative AI Consultation Memo -->
+      <section class="card">
+        <div class="card-title">
+          <span>Generative AI Psychiatric Consultation Memo</span>
+          <button class="btn-action" onclick="copyMemo()">📋 Copy Clinical Memo</button>
+        </div>
+        <div id="disp-memo" class="memo-content">
+          Loading clinical diagnostic consultation note...
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modal: Test New Patient -->
+  <div id="upload-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🧪 Test New Patient Actigraphy Data</h3>
+        <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label for="input-pid">Patient Identifier</label>
+        <input type="text" id="input-pid" placeholder="e.g. prospective_patient_01" value="prospective_patient_01">
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <div class="form-group" style="flex:1;">
+          <label for="input-age">Age Bracket</label>
+          <select id="input-age">
+            <option value="20-29">20-29</option>
+            <option value="30-34">30-34</option>
+            <option value="35-39" selected>35-39</option>
+            <option value="40-49">40-49</option>
+            <option value="50-59">50-59</option>
+            <option value="60+">60+</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label for="input-gender">Gender</label>
+          <select id="input-gender">
+            <option value="Female" selected>Female</option>
+            <option value="Male">Male</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Actigraphy CSV File</label>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file-input').click()">
+          <span style="font-size:1.8rem;">📁</span>
+          <p id="file-label">Click to select actigraphy .CSV or drag and drop here</p>
+          <span style="font-size:0.7rem; color:var(--text-muted);">(Format: timestamp, activity)</span>
+          <input type="file" id="csv-file-input" accept=".csv" style="display:none;" onchange="handleFileSelect(event)">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="font-size:0.75rem;">Or Quick-Test with Preloaded Cohort Sample:</label>
+        <div class="quick-sample-btns">
+          <button type="button" class="btn-sample" onclick="loadSampleData('condition')">⚡ Sample Depressed Patient</button>
+          <button type="button" class="btn-sample" onclick="loadSampleData('control')">⚡ Sample Healthy Control</button>
+        </div>
+      </div>
+
+      <div id="status-msg" class="status-msg"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeUploadModal()">Cancel</button>
+        <button type="button" id="btn-run-inference" class="btn-submit" onclick="runNewPatientInference()">🚀 Run Multimodal AI Engine</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

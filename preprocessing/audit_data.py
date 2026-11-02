@@ -34,6 +34,14 @@ def compute_file_sha256(filepath: str) -> str:
     return hasher.hexdigest()
 
 
+def natural_sort_key(filepath_or_id: str):
+    basename = os.path.splitext(os.path.basename(filepath_or_id))[0]
+    parts = basename.split("_")
+    group_order = 0 if parts[0] == "condition" else 1
+    num = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
+    return (group_order, num)
+
+
 def audit_dataset(config_path: str = "configs/data.yaml") -> dict:
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
@@ -69,8 +77,14 @@ def audit_dataset(config_path: str = "configs/data.yaml") -> dict:
     control_scores = scores_df[scores_df["number"].str.startswith("control")]
 
     # 2. Audit participant files
-    condition_files = sorted(glob.glob(os.path.join(condition_dir, "*.csv")))
-    control_files = sorted(glob.glob(os.path.join(control_dir, "*.csv")))
+    condition_files = sorted(
+        glob.glob(os.path.join(condition_dir, "*.csv")),
+        key=natural_sort_key,
+    )
+    control_files = sorted(
+        glob.glob(os.path.join(control_dir, "*.csv")),
+        key=natural_sort_key,
+    )
 
     all_files = [(f, "condition") for f in condition_files] + [(f, "control") for f in control_files]
     file_pids = set(os.path.splitext(os.path.basename(f))[0] for f, _ in all_files)

@@ -1,0 +1,4 @@
+lstm_layers,architecture,feature_dim,accuracy,balanced_accuracy,sensitivity,specificity,precision,f1_score,mcc,roc_auc
+2,2-Layer BiLSTM + 3 Stats + SVM,259,0.963937,0.962512,0.953488,0.971503,0.960360,0.956912,0.925697,0.993912
+3,3-Layer BiLSTM + 3 Stats + SVM,259,0.996243,0.996272,0.996422,0.996114,0.994643,0.995532,0.992257,0.999718
+4,4-Layer BiLSTM + 3 Stats + SVM,259,0.973704,0.972841,0.967799,0.977979,0.969480,0.968639,0.945828,0.996135

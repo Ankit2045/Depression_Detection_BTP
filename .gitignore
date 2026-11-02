@@ -19,3 +19,13 @@ htmlcov/
 
 # Processed intermediate data (can be regenerated)
 data/processed/
+
+# Raw dataset files (keep scores.csv tracked, large CSVs untracked)
+data/condition/
+data/control/
+*.zip
+
+# Scratch and personal docs
+scratch/
+*.pages
+Register*
