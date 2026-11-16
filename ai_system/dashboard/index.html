@@ -302,11 +302,8 @@
     /* Charts Row */
     .charts-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: 1fr;
       gap: 18px;
-    }
-    @media (max-width: 1080px) {
-      .charts-grid { grid-template-columns: 1fr; }
     }
     .card {
       background: var(--card-bg);
@@ -1143,7 +1140,7 @@
               <div id="disp-active-hour" class="active-hour-pill">☀️ 12:00 (Solar Midday)</div>
             </div>
 
-            <div style="height: 250px; position:relative;">
+            <div style="height: 300px; position:relative;">
               <canvas id="waveformChart"></canvas>
             </div>
 
@@ -1151,19 +1148,7 @@
             <div id="hourly-inspector-bar" class="hourly-readout">
               <span id="insp-hour">Hour 12:00</span> | 
               <span id="insp-patient">Patient: — c/m</span> vs <span id="insp-ctrl">Normal: — c/m</span> (<span id="insp-diff" class="dev-bad">—%</span>) | 
-              <span id="insp-attn">Attention: —%</span> | 
               <span id="insp-pheno" style="color:var(--warning); font-style:italic;">Midday Vigor State</span>
-            </div>
-          </div>
-
-          <!-- Transformer Attention Weights -->
-          <div class="card">
-            <div class="card-title">
-              <span>Temporal Transformer Self-Attention</span>
-              <span class="sub">Hourly Salience Weight (%)</span>
-            </div>
-            <div style="height: 330px;">
-              <canvas id="attentionChart"></canvas>
             </div>
           </div>
         </section>

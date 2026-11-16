@@ -429,42 +429,48 @@ function updateCharts(patient) {
     });
   }
 
-  // 2. Transformer Attention Chart
-  const ctxAttn = document.getElementById("attentionChart").getContext("2d");
-  if (attentionChartInstance) attentionChartInstance.destroy();
+  // 2. Transformer Attention Chart (Guarded if element exists)
+  const ctxAttnEl = document.getElementById("attentionChart");
+  if (ctxAttnEl) {
+    const ctxAttn = ctxAttnEl.getContext("2d");
+    if (attentionChartInstance) attentionChartInstance.destroy();
 
-  const attnData = (patient.attention_weights || Array(24).fill(1/24)).map(v => v * 100);
-  const barColors = attnData.map((v, i) => {
-    if (i >= 13 && i <= 17) return "#f43f5e"; // Diurnal dip
-    if (i >= 1 && i <= 5) return "#a855f7";   // Nocturnal wake
-    return "#38bdf8";
-  });
+    const attnData = (patient.attention_weights || Array(24).fill(1/24)).map(v => v * 100);
+    const barColors = attnData.map((v, i) => {
+      if (i >= 13 && i <= 17) return "#f43f5e"; // Diurnal dip
+      if (i >= 1 && i <= 5) return "#a855f7";   // Nocturnal wake
+      return "#38bdf8";
+    });
 
-  attentionChartInstance = new Chart(ctxAttn, {
-    type: "bar",
-    data: {
-      labels: hours,
-      datasets: [
-        {
-          label: "Transformer Self-Attention (%)",
-          data: attnData,
-          backgroundColor: barColors,
-          borderRadius: 4,
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
+    attentionChartInstance = new Chart(ctxAttn, {
+      type: "bar",
+      data: {
+        labels: hours,
+        datasets: [
+          {
+            label: "Transformer Self-Attention (%)",
+            data: attnData,
+            backgroundColor: barColors,
+            borderRadius: 4,
+          }
+        ]
       },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: "#94a3b8", font: { size: 8 } } },
-        y: { grid: { color: "#1e293b" }, ticks: { color: "#94a3b8", font: { size: 9 } }, title: { display: true, text: "Attention Weight %", color: "#94a3b8", font: { size: 9 } } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#94a3b8", font: { size: 8 } } },
+          y: { grid: { color: "#1e293b" }, ticks: { color: "#94a3b8", font: { size: 9 } }, title: { display: true, text: "Attention Weight %", color: "#94a3b8", font: { size: 9 } } }
+        }
       }
-    }
-  });
+    });
+  } else if (attentionChartInstance) {
+    attentionChartInstance.destroy();
+    attentionChartInstance = null;
+  }
 }
 
 // -------------------------------------------------------------
@@ -540,7 +546,6 @@ function scrubHour(hour) {
         <span>Patient: <strong>${pAct.toFixed(1)} c/m</strong></span> vs 
         <span>Control: <strong>${cAct.toFixed(1)} c/m</strong></span> 
         (<span class="${diffPct < -15 ? 'dev-bad' : 'dev-good'}">${diffPct >= 0 ? '+' : ''}${diffPct}%</span>) | 
-        <span>Transformer Attention: <strong>${attn}%</strong></span> | 
         <span style="color:${phenoColor}; font-weight:700;">${phenoNote}</span>
       `;
     }
