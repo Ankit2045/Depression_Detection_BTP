@@ -25,7 +25,7 @@ import torch
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from statistical.extract_features import extract_features_for_window
 from deep_learning.cnn1d import ActigraphyCNN1D
-from ai_system.clinical_agent import ClinicalDiagnosticCopilot
+from ai_system.clinical_agent import ClinicalDiagnosticCopilot, synthesize_clinical_memo
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -183,64 +183,41 @@ class NewPatientPredictor:
 
         # 6. Risk Tier Classification
         if p_dual_ensemble >= 0.80:
-            risk_tier = "CRITICAL / HIGH RISK OF CLINICAL DEPRESSION"
             risk_badge = "CRITICAL RISK"
-            action_text = "Urgent psychiatric assessment recommended. Marked psychomotor retardation and circadian flattening detected."
         elif p_dual_ensemble >= 0.50:
-            risk_tier = "MODERATE / BORDERLINE RISK OF DEPRESSION"
             risk_badge = "MODERATE RISK"
-            action_text = "Borderline psychomotor slowing detected. Recommend structured clinical interview (MADRS/HAM-D) and follow-up monitoring."
         elif p_dual_ensemble >= 0.30:
-            risk_tier = "LOW / MILD RESIDUAL SYMPTOM PROFILE"
             risk_badge = "LOW RISK"
-            action_text = "Activity signatures within normal healthy envelope. Recommend routine wellness check."
         else:
-            risk_tier = "VERY LOW RISK (EUTHYMIC / HEALTHY PROFILE)"
             risk_badge = "HEALTHY / EUTHYMIC"
-            action_text = "Robust diurnal circadian amplitude and normal spontaneous motor vitality. No depressive motor deceleration detected."
 
-        # 7. Generate Clinical Memo
-        memo = f"""# CLINICAL AI PSYCHIATRIC CONSULTATION MEMO
-**Antigravity Clinical Decision Support System (DTU-GP178)**  
-*Date of Assessment: Generated from Continuous 24h Actigraphy Protocol*
-
----
-
-### I. PATIENT DEMOGRAPHICS & AI RISK STRATIFICATION
-- **Patient Identifier:** `{patient_id}`
-- **Age Bracket:** {age} | **Gender:** {gender}
-- **Clinical Cohort Ground Truth:** Prospective / New Diagnostic Subject
-- **AI Fused Depression Probability:** **{p_dual_ensemble * 100:.2f}%**
-- **Clinical Risk Assessment:** **{risk_badge}** — *{risk_tier}*
-
----
-
-### II. QUANTITATIVE DIGITAL BIOMARKER DISCOVERY (VS. HEALTHY NORMS)
-| Physiological Domain | Patient Value | Healthy Control Reference | Z-Score (Deviation) | Clinical Significance |
-| :--- | :---: | :---: | :---: | :--- |
-| **Daytime Sedentary Ratio** | **{day_sed * 100:.1f}%** | {day_sed_norm * 100:.1f}% (±{day_sed_std * 100:.1f}%) | **{day_sed_z:+.2f} $\\sigma$** | {"Severe psychomotor retardation" if day_sed_z > 1.0 else "Normal daytime mobility"} |
-| **M10 Daytime Peak Vigor** | **{m10:.1f}** | {m10_norm:.1f} (±{m10_std:.1f}) | **{m10_z:+.2f} $\\sigma$** | {"Circadian amplitude blunting" if m10_z < -0.8 else "Preserved diurnal amplitude"} |
-| **Median Motor Activity** | **{med_act:.1f} counts/min** | {med_norm:.1f} counts/min | **{med_z:+.2f} $\\sigma$** | {"Hypokinesia / Low baseline vigor" if med_act < 70 else "Normal spontaneous motor tone"} |
-| **Nocturnal Mean Activity** | **{noct:.1f} counts/min** | {noct_norm:.1f} counts/min | **{noct_z:+.2f} $\\sigma$** | {"Restless sleep / Micro-awakenings" if noct > 180 else "Consolidated nocturnal sleep"} |
-
----
-
-### III. PSYCHIATRIC PHENOTYPE & CIRCADIAN RHYTHMICITY
-1. **Psychomotor Tone:**
-   The patient exhibited an average daytime sedentary ratio of {day_sed * 100:.1f}%, representing a {day_sed_z:+.2f} standard deviation shift relative to age-matched healthy baselines. {"Continuous bouts of daytime immobility indicate marked psychomotor slowing." if day_sed_z > 0.5 else "Daytime movement bouts demonstrate normal motor engagement."}
-2. **Circadian Rhythm Architecture:**
-   Peak 10-hour diurnal vigor (M10 = {m10:.1f}) is {"significantly flattened, consistent with circadian desynchronization and blunted relative amplitude." if m10_z < -0.5 else "well preserved, indicating stable entrainment to the diurnal light-dark cycle."}
-3. **Nocturnal Fragmentation:**
-   Sleep periods show {"elevated micro-movement spikes, indicating disturbed sleep efficiency and possible nocturnal awakenings." if noct > 150 else "quiet motor consolidation, indicating stable restorative rest."}
-
----
-
-### IV. TARGETED CLINICAL ACTION PLAN FOR ATTENDING PSYCHIATRIST
-- **Action Tier:** {action_text}
-- **Recommended Assessments:** Administer structured MADRS/HAM-D rating scale to cross-validate motor retardation against subjective depressive affect.
-- **Digital Biomarker Target:** Prioritize increasing daily active intervals during the afternoon circadian dip (14:00 - 17:00).
-- **Signed:** *Antigravity Multimodal Clinical Decision Support Engine (Version 2.0)*
-"""
+        # 7. Generate Enhanced Clinical Memo
+        memo = synthesize_clinical_memo(
+            participant_id=patient_id,
+            age=age,
+            gender=gender,
+            prob=p_dual_ensemble,
+            true_str="Prospective / Testing Patient Cohort",
+            afftype_str="Diagnostic Evaluation",
+            madrs1=None,
+            madrs2=None,
+            day_sed=day_sed,
+            day_sed_norm=day_sed_norm,
+            day_sed_std=day_sed_std,
+            day_sed_z=day_sed_z,
+            m10=m10,
+            m10_norm=m10_norm,
+            m10_std=m10_std,
+            m10_z=m10_z,
+            med_act=med_act,
+            med_norm=med_norm,
+            med_std=med_std,
+            med_z=med_z,
+            noct=noct,
+            noct_norm=noct_norm,
+            noct_std=noct_std,
+            noct_z=noct_z,
+        )
         # Save clinical memo
         os.makedirs(output_memo_dir, exist_ok=True)
         memo_path = os.path.join(output_memo_dir, f"{patient_id}_clinical_memo.md")

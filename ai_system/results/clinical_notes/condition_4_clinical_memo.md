@@ -1,42 +1,73 @@
 # CLINICAL AI PSYCHIATRIC CONSULTATION MEMO
 **Antigravity Clinical Decision Support System (DTU-GP178)**  
-*Date of Assessment: Generated from Continuous 24h Actigraphy Protocol*
+*Protocol: 55-Fold LOSO Multimodal Deep Learning & Circadian Biomarker Pipeline*
 
 ---
 
-### I. PATIENT DEMOGRAPHICS & AI RISK STRATIFICATION
+### I. PATIENT PROFILE & AI RISK STRATIFICATION
 - **Patient Identifier:** `condition_4`
-- **Age Bracket:** 25-29 | **Gender:** Female
-- **Clinical Cohort Ground Truth:** Depression Cohort (Condition)
-- **Affective Subtype:** Bipolar II
+- **Demographics:** Age Bracket: **25-29** | Gender: **Female**
+- **Clinical Cohort Ground Truth:** **Depression Cohort (Condition)**
+- **Affective History:** **Bipolar II**
 - **AI Fused Depression Probability:** **64.64%**
-- **Clinical Risk Assessment:** **MODERATE RISK** — *MODERATE / BORDERLINE RISK OF DEPRESSION*
+- **Diagnostic Risk Status:** **MODERATE RISK** — *MODERATE / BORDERLINE RISK OF DEPRESSION*
 
 
 ---
 
-### II. QUANTITATIVE DIGITAL BIOMARKER DISCOVERY (VS. HEALTHY NORMS)
-| Physiological Domain | Patient Value | Healthy Control Reference | Z-Score (Deviation) | Clinical Significance |
+### II. DEPRESSION SUBTYPE & PHENOTYPE CLASSIFICATION
+- **Identified Affective Subtype:** **Agitated / Bipolar Mixed Depression with Terminal Insomnia (Hyperkinetic / Restless Subtype)**
+- **Diagnostic Reference Code:** `F31.3 / F31.4 (Bipolar Affective Disorder, Depressive Episode with Mixed/Agitated Features)`
+- **Clinical Phenotypic Presentation:** Marked nocturnal sleep fragmentation with elevated micro-arousals, restless motor bursts, psychomotor pacing, and disrupted day-night amplitude despite elevated raw activity counts.
+- **Symptom Severity Rating:** **Agitated / Bipolar Mixed Features**
+
+---
+
+### III. 24-HOUR WAVEFORM FLUCTUATION ANALYSIS (WHY THE GRAPH VARIES)
+*Clinical explanation of the patient's continuous actigraphy curve relative to the healthy control baseline:*
+- **Nocturnal Elevation / Insomnia Paradox (01:00–05:00):** The patient's waveform spikes abnormally ABOVE the healthy baseline during the deep night. This is caused by persistent micro-arousals, tossing and turning, and nocturnal pacing bouts symptomatic of terminal insomnia.
+- **Erratic Diurnal Fluctuations (08:00–18:00):** Motor activity displays high, jagged amplitude spikes rather than a smooth circadian wave. The patient exhibits restless physical tension and inability to sit quietly, giving an overall high volume that temporarily exceeds the control baseline.
+- **Blunted Amplitude ($RA$):** Although peak counts are high, the day-to-night contrast is collapsed due to lack of nocturnal sleep quiescence.
+
+---
+
+### IV. COMPREHENSIVE DIGITAL BIOMARKER AUDIT (ALL ACTIVITIES)
+| Physiological Domain | Patient Value | Healthy Control Reference | Z-Score Deviation | Clinical Significance & Phenomenology |
 | :--- | :---: | :---: | :---: | :--- |
-| **Daytime Sedentary Ratio** | **26.7%** | 12.6% (±8.0%) | **+1.27 $\sigma$** | Severe psychomotor retardation |
-| **M10 Daytime Peak Vigor** | **486.1** | 471.4 (±130.0) | **+0.09 $\sigma$** | Preserved diurnal amplitude |
-| **Median Motor Activity** | **126.7 counts/min** | 117.1 counts/min | **+0.11 $\sigma$** | Normal spontaneous motor tone |
-| **Nocturnal Mean Activity** | **190.7 counts/min** | 168.2 counts/min | — | Restless nocturnal sleep bouts |
+| **Daytime Sedentary Ratio** | **26.7%** | 12.6% (±11.1%) | **+1.27 $\sigma$** | Severe psychomotor retardation (>1σ above normal immobility) |
+| **M10 Daytime Peak Vigor** | **486.1** | 471.4 (±166.3) | **+0.09 $\sigma$** | Preserved diurnal peak amplitude |
+| **Median Motor Activity** | **126.7 counts/min** | 117.1 counts/min | **+0.11 $\sigma$** | Normal spontaneous motor cadence |
+| **Nocturnal Mean Activity** | **190.7 counts/min** | 168.2 counts/min | **+0.25 $\sigma$** | Consolidated restorative nocturnal rest |
 
 ---
 
-### III. PSYCHIATRIC PHENOTYPE & CIRCADIAN RHYTHMICITY
-1. **Psychomotor Tone:**
-   The patient exhibited an average daytime sedentary ratio of 26.7%, representing a +1.27 standard deviation shift relative to age-matched healthy baselines. Continuous bouts of daytime immobility indicate marked psychomotor slowing.
-2. **Circadian Rhythm Architecture:**
-   Peak 10-hour diurnal vigor (M10 = 486.1) is well preserved, consistent with stable entrainment to the light-dark cycle.
-3. **Nocturnal Fragmentation:**
-   Sleep periods show elevated micro-movement spikes ({noct:.1f} counts/min), indicating disturbed sleep efficiency and possible nocturnal awakenings.
+### V. TARGETED CLINICAL MEASURES & TREATMENT ROADMAP
+*Evidence-based therapeutic interventions recommended for the attending clinical team:*
+
+1. **Chronotherapy & Phototherapy Protocol:**
+   - Prescribe **Morning Bright Light Therapy (10,000 lux)** for 30–45 minutes daily at 07:30 AM to advance circadian phase, suppress daytime melatonin, and realign the blunted sleep-wake cycle.
+   - Enforce total evening light restriction (blue-light blocking eyewear after 20:30).
+
+2. **Sleep Architecture & CBT-I (Cognitive Behavioral Therapy for Insomnia):**
+   - Enforce a strict sleep window (e.g. 23:00 to 07:00); prohibit daytime restorative naps exceeding 20 minutes to restore homeostatic sleep pressure.
+   - Stimulus control: Bedroom restricted exclusively to sleep; leave bed if awake for >20 minutes.
+
+3. **Structured Behavioral Activation (BA):**
+   - Implement scheduled, non-negotiable physical mobility bouts: **20 minutes of moderate aerobic walking** at 09:00 AM and 14:30 PM (specifically targeting the mid-afternoon depressive dip).
+   - Use wearable actigraphy for continuous biofeedback to break prolonged (>30 min) daytime immobility spells.
+
+4. **Psychopharmacological & Clinical Review:**
+   - *If Melancholic Retardation:* Consider activating pharmacotherapy (e.g., Bupropion or SNRIs) following comprehensive psychiatric assessment.
+   - *If Agitated / Bipolar Mixed Features:* Exercise caution with unmonitored monoaminergic antidepressants to prevent affective switching or manic induction; evaluate mood stabilizers (Lithium, Lamotrigine) or atypical antipsychotics.
+   - Administer structured MADRS/HAM-D rating scales bi-weekly to monitor objective symptom resolution.
+
+5. **Patient Safety & Crisis Support Protocol:**
+   - Standardize psychiatric safety planning. If experiencing escalating distress or self-harm ideation, immediate 24/7 crisis helplines must be engaged:
+     * **Tele-MANAS (National Mental Health Helpline, India):** `14416` or `1800-891-4416` (24/7 Toll-Free)
+     * **KIRAN Mental Health Helpline:** `1800-599-0019`
+     * **Vandrevala Foundation Helpline:** `+91 9999 666 555` (24/7 Crisis Support)
+     * **AASRA Suicide Prevention Helpline:** `+91 98204 66726`
+     * **National Emergency Service (India):** `112`
 
 ---
-
-### IV. TARGETED CLINICAL ACTION PLAN FOR ATTENDING PSYCHIATRIST
-- **Action Tier:** Borderline psychomotor slowing detected. Recommend structured clinical interview (MADRS/HAM-D) and follow-up monitoring.
-- **Recommended Assessments:** Administer structured MADRS/HAM-D rating scale to cross-validate motor retardation against subjective depressive affect.
-- **Digital Biomarker Target:** Prioritize increasing daily active intervals during the afternoon circadian dip (14:00 - 17:00).
-- **Signed:** *Antigravity Multimodal Clinical Decision Support Engine (Version 2.0)*
+*Signed: Antigravity Multimodal Clinical Decision Support Engine (Version 2.0 | DTU-GP178)*

@@ -54,7 +54,7 @@ def test_clinical_copilot_memo_generation():
     assert "condition_1" in memo
     assert "Daytime Sedentary Ratio" in memo
     assert "M10 Daytime Peak Vigor" in memo
-    assert "TARGETED CLINICAL ACTION PLAN" in memo
+    assert "TARGETED CLINICAL" in memo
 
 
 def test_ai_system_deliverables_exist():

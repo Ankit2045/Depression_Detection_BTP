@@ -99,12 +99,23 @@ To display the complete comparative benchmark table:
 python show_accuracy.py
 ```
 
-### Launch Clinician Web Dashboard
-To launch the interactive clinical web application locally:
+### Compile Publication-Ready Research Paper (PDF & HTML)
+To build the complete 19-page publication-styled academic paper with embedded figures, tables, and mathematical formulas:
+```bash
+python scripts/compile_paper.py
+```
+- **PDF Document:** [`reports/Research_Paper_BTP_GP178.pdf`](reports/Research_Paper_BTP_GP178.pdf)
+- **Interactive HTML:** [`reports/Research_Paper_BTP_GP178.html`](reports/Research_Paper_BTP_GP178.html)
+
+### Clinician Web Dashboard
+- **Live Online Dashboard:** [https://ankit2045.github.io/Depression_Detection_BTP/](https://ankit2045.github.io/Depression_Detection_BTP/)
+- **Local Launch:**
 ```bash
 python -m http.server 8000 --directory ai_system/dashboard
+# or for full PyTorch inference server:
+python ai_system/dashboard_server.py 8000
 ```
-Open **`http://localhost:8000`** to browse all 55 participants, inspect 24h waveforms, and test new CSV files.
+Open **`http://localhost:8000`** to browse all 65 cohort participants, inspect 24h waveforms, and test new CSV files.
 
 ### Run Automated Test Suite (46 Tests)
 ```bash

@@ -5,11 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Antigravity Clinical AI Co-Pilot | DTU BTP GP178</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="data.js?v=2.4"></script>
+  <script>
+    // Fail-safe view switcher loaded early before DOM parsing
+    function switchView(viewName) {
+      window.currentView = viewName;
+
+      // Update nav buttons
+      document.querySelectorAll(".nav-tab-btn").forEach(function(btn) {
+        btn.classList.remove("active");
+      });
+      var activeTabBtn = document.getElementById("tab-btn-" + viewName);
+      if (activeTabBtn) activeTabBtn.classList.add("active");
+
+      // Update view sections
+      document.querySelectorAll(".view-section").forEach(function(sec) {
+        sec.classList.remove("active");
+        sec.style.display = "none";
+      });
+      var targetView = document.getElementById("view-" + viewName);
+      if (targetView) {
+        targetView.classList.add("active");
+        targetView.style.display = "block";
+      }
+
+      // Hide sidebar in Challenge and Awareness views; show only in Console
+      var sidebar = document.getElementById("sidebar");
+      if (sidebar) {
+        if (viewName === "console") {
+          sidebar.classList.remove("hidden");
+          sidebar.style.display = "flex";
+        } else {
+          sidebar.classList.add("hidden");
+          sidebar.style.display = "none";
+        }
+      }
+
+      // Scroll workspace to top
+      var mainContent = document.getElementById("main-content");
+      if (mainContent) mainContent.scrollTop = 0;
+
+      // Trigger blind viva challenge initialization if switching to challenge
+      if (viewName === "challenge" && typeof window.initBlindChallenge === "function") {
+        window.initBlindChallenge();
+      }
+    }
+    window.switchView = switchView;
+  </script>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
+      --bg: #090d16;
+      --card-bg: #131c2e;
+      --card-border: #1e293b;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --primary: #38bdf8;
@@ -17,13 +64,69 @@
       --danger: #f43f5e;
       --warning: #f59e0b;
       --success: #10b981;
-      --sidebar-width: 320px;
+      --purple: #a855f7;
+      --sidebar-width: 330px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-    /* Sidebar */
+    /* Top Navigation Bar */
+    .top-bar {
+      padding: 14px 24px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .top-title h1 { font-size: 1.25rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .top-title span { font-size: 0.78rem; color: var(--text-muted); }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: #090d16;
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+    .nav-tab-btn {
+      padding: 7px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .nav-tab-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+    .nav-tab-btn.active {
+      background: var(--primary);
+      color: #090d16;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+    }
+
+    .top-stats { display: flex; gap: 10px; align-items: center; }
+    .stat-pill {
+      background: #090d16;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+    .stat-pill strong { color: var(--primary); font-size: 0.84rem; }
+
+    /* Sidebar for Console */
     #sidebar {
       width: var(--sidebar-width);
       background-color: var(--card-bg);
@@ -31,48 +134,56 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      flex-shrink: 0;
+      transition: width 0.2s ease, opacity 0.2s ease;
+    }
+    #sidebar.hidden {
+      display: none !important;
+      width: 0 !important;
+      visibility: hidden !important;
+      overflow: hidden !important;
+      border-right: none !important;
     }
     .sidebar-header {
-      padding: 18px;
+      padding: 16px;
       border-bottom: 1px solid var(--card-border);
     }
-    .sidebar-header h2 { font-size: 1.1rem; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-    .sidebar-header p { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
-    .search-box {
-      margin-top: 12px;
-      position: relative;
-    }
+    .sidebar-header h2 { font-size: 1.05rem; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    .sidebar-header p { font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; }
+    .search-box { margin-top: 10px; position: relative; }
     .search-box input {
       width: 100%;
-      padding: 8px 12px;
-      background: #0f172a;
+      padding: 7px 11px;
+      background: #090d16;
       border: 1px solid var(--card-border);
       border-radius: 6px;
       color: var(--text);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
     }
-    .filter-pills { display: flex; gap: 6px; margin-top: 10px; }
+    .filter-pills { display: flex; gap: 5px; margin-top: 8px; }
     .pill {
-      font-size: 0.72rem;
-      padding: 4px 8px;
+      font-size: 0.7rem;
+      padding: 3px 8px;
       border-radius: 4px;
-      background: #0f172a;
+      background: #090d16;
       color: var(--text-muted);
       cursor: pointer;
       border: 1px solid var(--card-border);
+      transition: all 0.15s;
     }
-    .pill.active { background: var(--primary); color: #0f172a; font-weight: bold; }
+    .pill:hover { border-color: var(--primary); color: var(--text); }
+    .pill.active { background: var(--primary); color: #090d16; font-weight: bold; border-color: var(--primary); }
 
     .btn-new-patient {
       width: 100%;
-      margin-top: 12px;
-      padding: 9px 12px;
+      margin-top: 10px;
+      padding: 8px 12px;
       background: linear-gradient(135deg, #0284c7, #38bdf8);
-      color: #0f172a;
+      color: #090d16;
       border: none;
       border-radius: 6px;
       font-weight: 700;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -82,23 +193,708 @@
     }
     .btn-new-patient:hover { opacity: 0.9; }
 
-    /* Modal Styles */
+    #patient-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .patient-item {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: #090d16;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .patient-item:hover { border-color: var(--primary); background: #111a2c; transform: translateY(-1px); }
+    .patient-item.selected { border-color: var(--primary); background: #162640; box-shadow: 0 0 12px rgba(56, 189, 248, 0.2); }
+    .patient-item .p-id { font-weight: 700; font-size: 0.84rem; display: flex; align-items: center; gap: 5px; }
+    .patient-item .p-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .patient-item .p-tag {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      margin-top: 3px;
+      display: inline-block;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-high { background: rgba(244, 63, 94, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .badge-mod { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+    .badge-low { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+
+    /* Main Workspace Views */
+    #main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      height: 100vh;
+      width: 100%;
+      min-width: 0;
+    }
+    .view-section { display: none; width: 100%; }
+    .view-section.active { display: block; width: 100%; }
+
+    /* Console Container */
+    .dashboard-container {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Patient Banner */
+    .patient-banner {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .banner-info h2 { font-size: 1.35rem; color: var(--text); display: flex; align-items: center; gap: 10px; }
+    .banner-meta { display: flex; gap: 14px; margin-top: 6px; font-size: 0.82rem; color: var(--text-muted); flex-wrap: wrap; }
+    .banner-risk {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .risk-score { font-size: 1.9rem; font-weight: 800; line-height: 1; }
+
+    /* Digital Biomarker Grid */
+    .biomarker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .bio-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px;
+      transition: border-color 0.2s;
+    }
+    .bio-box:hover { border-color: rgba(56, 189, 248, 0.4); }
+    .bio-name { font-size: 0.74rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .bio-val { font-size: 1.28rem; font-weight: 800; margin: 4px 0; color: var(--text); }
+    .bio-dev { font-size: 0.72rem; }
+    .dev-bad { color: var(--danger); font-weight: 600; }
+    .dev-good { color: var(--success); font-weight: 600; }
+
+    /* Charts Row */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 1080px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title .sub { font-size: 0.72rem; color: var(--text-muted); font-weight: normal; }
+
+    /* Memo Box */
+    .memo-content {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 22px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.83rem;
+      line-height: 1.65;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+    .btn-action {
+      background: var(--primary);
+      color: #090d16;
+      border: none;
+      padding: 7px 15px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: background 0.2s;
+    }
+    .btn-action:hover { background: var(--primary-hover); }
+
+    /* Consensus Bar */
+    .consensus-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+    .consensus-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .consensus-badge {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .consensus-branches {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .branch-card {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+    .branch-card.fusion {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.05);
+    }
+    .branch-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      display: block;
+    }
+    .branch-val {
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-top: 3px;
+      color: var(--text);
+    }
+    .branch-val span {
+      color: var(--primary);
+    }
+
+    /* Chart Toggle Controls */
+    .chart-view-toggle {
+      display: flex;
+      gap: 6px;
+      background: #090d16;
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+    .btn-toggle {
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-toggle:hover { color: var(--text); }
+    .btn-toggle.active {
+      background: var(--primary);
+      color: #090d16;
+      font-weight: 700;
+    }
+
+    /* Diurnal Day Player & Scrubber */
+    .diurnal-player-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 8px 14px;
+      background: #090d16;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      flex-wrap: wrap;
+    }
+    .btn-play {
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #090d16;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .time-scrubber-wrapper {
+      flex: 1;
+      min-width: 180px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .time-scrubber-wrapper input[type=range] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .scrubber-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+    .active-hour-pill {
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      background: #131c2e;
+      border: 1px solid var(--primary);
+      border-radius: 20px;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+    .hourly-readout {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #090d16;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Digital Twin Simulator */
+    .sim-card {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: linear-gradient(180deg, #131c2e, #0e1624);
+    }
+    .btn-reset-sim {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset-sim:hover { border-color: var(--primary); color: var(--text); }
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .sim-grid { grid-template-columns: 1fr; }
+    }
+    .sim-group-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sim-toggle {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #090d16;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .sim-toggle:hover { border-color: var(--primary); }
+    .sim-toggle input[type=checkbox] {
+      accent-color: #10b981;
+      width: 17px;
+      height: 17px;
+      cursor: pointer;
+      margin-top: 2px;
+    }
+    .sim-text strong {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+    .sim-text span {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .sim-slider-row {
+      display: flex;
+      gap: 14px;
+      margin-top: 12px;
+      padding: 10px;
+      background: #090d16;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+    .sim-slider-row label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .sim-slider-row input[type=range] {
+      width: 100%;
+      accent-color: #10b981;
+      cursor: pointer;
+    }
+    .slider-val {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #10b981;
+      float: right;
+    }
+    .sim-results {
+      background: #090d16;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sim-results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--card-border);
+      text-align: center;
+    }
+    .sim-delta-badge {
+      text-align: center;
+      margin: 14px 0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.84rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid #10b981;
+    }
+    .sim-prognosis-text {
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      background: #131c2e;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Blind Viva Challenge View */
+    .challenge-container {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .challenge-header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .challenge-header h2 { font-size: 1.3rem; color: var(--text); }
+    .challenge-header p { font-size: 0.82rem; color: var(--text-muted); margin-top: 4px; }
+    .challenge-stats { display: flex; gap: 12px; align-items: center; }
+    .quiz-options-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .quiz-btn-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .btn-quiz-option {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-quiz-option:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      background: #121e33;
+    }
+    .q-opt-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .q-opt-desc {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: block;
+    }
+    .quiz-reveal-panel {
+      background: var(--card-bg);
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      overflow: hidden;
+      margin-top: 14px;
+    }
+    .quiz-verdict-banner {
+      padding: 12px 18px;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .verdict-correct { background: rgba(16, 185, 129, 0.2); color: #10b981; border-bottom: 1px solid #10b981; }
+    .verdict-wrong { background: rgba(244, 63, 94, 0.2); color: var(--danger); border-bottom: 1px solid var(--danger); }
+    .quiz-reveal-content { padding: 18px 20px; }
+    .quiz-meta-reveal {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      padding-bottom: 14px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 0.85rem;
+    }
+    .quiz-explanation {
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      background: #090d16;
+      padding: 14px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Print Hospital Report Styles */
+    @media print {
+      body { background: #fff !important; color: #000 !important; height: auto !important; overflow: visible !important; }
+      #sidebar, .top-bar, .diurnal-player-bar, .chart-view-toggle, .sim-controls, .btn-action, .btn-new-patient, .btn-reset-sim, #upload-modal { display: none !important; }
+      #main-content { overflow: visible !important; height: auto !important; width: 100% !important; }
+      .card, .patient-banner, .bio-box, .consensus-bar, .sim-results { background: #fff !important; border: 1px solid #ccc !important; color: #000 !important; }
+      .bio-val, .risk-score, h1, h2, h3 { color: #000 !important; }
+      .memo-content { background: #fafafa !important; color: #000 !important; border: 1px solid #ccc !important; }
+    }
+
+    /* History & Registry View */
+    .history-container {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .history-header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .history-header h2 { font-size: 1.3rem; color: var(--text); }
+    .history-header p { font-size: 0.82rem; color: var(--text-muted); margin-top: 4px; }
+    .history-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 14px;
+    }
+    .history-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .history-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .h-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .h-card-title { font-weight: 700; font-size: 0.95rem; }
+    .h-card-meta { font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px; }
+    .h-card-prob {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 8px 10px;
+      background: #090d16;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+    .btn-inspect {
+      width: 100%;
+      padding: 8px;
+      background: #090d16;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-inspect:hover { background: var(--primary); color: #090d16; }
+
+    /* Awareness & Crisis View */
+    .awareness-container {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .awareness-hero {
+      background: linear-gradient(135deg, #131c2e, #1e293b);
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      padding: 26px 30px;
+    }
+    .awareness-hero h2 { font-size: 1.55rem; color: var(--primary); margin-bottom: 8px; }
+    .awareness-hero p { font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; }
+
+    .helpline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .helpline-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .helpline-card.priority { border-color: var(--danger); background: linear-gradient(145deg, #1e1320, #131c2e); }
+    .helpline-card.primary-line { border-color: var(--primary); background: linear-gradient(145deg, #132238, #131c2e); }
+    .helpline-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    .helpline-card h3 { font-size: 1.1rem; margin-bottom: 6px; color: var(--text); }
+    .helpline-num { font-size: 1.45rem; font-weight: 800; color: var(--primary); margin: 6px 0; letter-spacing: 0.5px; }
+    .helpline-card.priority .helpline-num { color: var(--danger); }
+    .helpline-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px; }
+    .btn-call {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #090d16;
+      background: var(--primary);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn-call.danger { background: var(--danger); color: #fff; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+    }
+    .info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .info-card h3 { font-size: 1.05rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .info-card ul { padding-left: 20px; font-size: 0.84rem; color: #cbd5e1; line-height: 1.6; }
+    .info-card li { margin-bottom: 6px; }
+
+    /* Modal Styling */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.75);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      backdrop-filter: blur(4px);
     }
-    .modal-overlay.active { display: flex; }
     .modal {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 10px;
-      width: 520px;
+      width: 540px;
       max-width: 95vw;
       padding: 24px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -120,20 +916,12 @@
       cursor: pointer;
     }
     .modal-close:hover { color: var(--text); }
-    .form-group {
-      margin-bottom: 14px;
-    }
-    .form-group label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 5px;
-      color: var(--text-muted);
-    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
     .form-group input, .form-group select {
       width: 100%;
       padding: 8px 12px;
-      background: #0f172a;
+      background: #090d16;
       border: 1px solid var(--card-border);
       border-radius: 6px;
       color: var(--text);
@@ -145,34 +933,24 @@
       padding: 18px;
       text-align: center;
       cursor: pointer;
-      background: #0f172a;
+      background: #090d16;
       transition: all 0.2s;
     }
-    .drop-zone:hover, .drop-zone.dragover {
-      border-color: var(--primary);
-      background: #13213a;
-    }
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: #13213a; }
     .drop-zone p { font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; }
-    .quick-sample-btns {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
+    .quick-sample-btns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
     .btn-sample {
-      flex: 1;
       padding: 6px 10px;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       background: #1e293b;
       border: 1px solid var(--card-border);
       border-radius: 4px;
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
+      text-align: center;
     }
-    .btn-sample:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
+    .btn-sample:hover { border-color: var(--primary); color: var(--primary); }
     .modal-actions {
       display: flex;
       justify-content: flex-end;
@@ -192,18 +970,13 @@
     }
     .btn-submit {
       background: var(--primary);
-      color: #0f172a;
+      color: #090d16;
       border: none;
       padding: 8px 18px;
       border-radius: 6px;
       font-weight: 700;
       cursor: pointer;
       font-size: 0.85rem;
-      transition: opacity 0.2s;
-    }
-    .btn-submit:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
     }
     .status-msg {
       font-size: 0.8rem;
@@ -215,165 +988,7 @@
     .status-msg.info { display: block; background: rgba(56, 189, 248, 0.15); color: var(--primary); border: 1px solid var(--primary); }
     .status-msg.error { display: block; background: rgba(244, 63, 94, 0.15); color: var(--danger); border: 1px solid var(--danger); }
 
-    #patient-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px;
-    }
-    .patient-item {
-      padding: 10px 12px;
-      margin-bottom: 6px;
-      background: #0f172a;
-      border-radius: 6px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: all 0.2s;
-    }
-    .patient-item:hover { border-color: var(--primary); background: #13213a; }
-    .patient-item.selected { border-color: var(--primary); background: #1a3258; }
-    .patient-item .p-id { font-weight: 600; font-size: 0.88rem; }
-    .patient-item .p-sub { font-size: 0.72rem; color: var(--text-muted); }
-    .badge {
-      font-size: 0.7rem;
-      padding: 3px 7px;
-      border-radius: 12px;
-      font-weight: 600;
-    }
-    .badge-high { background: rgba(244, 63, 94, 0.2); color: var(--danger); border: 1px solid var(--danger); }
-    .badge-mod { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
-    .badge-low { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
-
-    /* Main Workspace */
-    #main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      height: 100vh;
-    }
-
-    /* Top Bar */
-    .top-bar {
-      padding: 16px 24px;
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--card-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .top-title h1 { font-size: 1.35rem; font-weight: 700; color: var(--text); }
-    .top-title span { font-size: 0.8rem; color: var(--text-muted); }
-    .top-stats { display: flex; gap: 16px; }
-    .stat-pill {
-      background: #0f172a;
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid var(--card-border);
-      font-size: 0.8rem;
-    }
-    .stat-pill strong { color: var(--primary); font-size: 0.92rem; }
-
-    /* Dashboard View */
-    .dashboard-container {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    /* Patient Banner */
-    .patient-banner {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 18px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .banner-info h2 { font-size: 1.4rem; color: var(--text); }
-    .banner-meta { display: flex; gap: 14px; margin-top: 6px; font-size: 0.85rem; color: var(--text-muted); }
-    .banner-risk {
-      text-align: right;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-    }
-    .risk-score { font-size: 1.8rem; font-weight: 800; }
-
-    /* Grid Row */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
-    }
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 18px;
-    }
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .card-title .sub { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; }
-
-    /* Biomarker Metrics Grid */
-    .biomarker-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-    }
-    .bio-box {
-      background: #0f172a;
-      border: 1px solid var(--card-border);
-      border-radius: 6px;
-      padding: 12px;
-    }
-    .bio-name { font-size: 0.75rem; color: var(--text-muted); }
-    .bio-val { font-size: 1.25rem; font-weight: 700; margin: 4px 0; color: var(--text); }
-    .bio-dev { font-size: 0.72rem; }
-    .dev-bad { color: var(--danger); }
-    .dev-good { color: var(--success); }
-
-    /* Memo Box */
-    .memo-content {
-      background: #0b1120;
-      border: 1px solid var(--card-border);
-      border-radius: 6px;
-      padding: 20px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.83rem;
-      line-height: 1.6;
-      color: #e2e8f0;
-      white-space: pre-wrap;
-      max-height: 480px;
-      overflow-y: auto;
-    }
-    .btn-action {
-      background: var(--primary);
-      color: #0f172a;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: background 0.2s;
-    }
-    .btn-action:hover { background: var(--primary-hover); }
-
-    /* Scrollbar */
+    /* Scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
@@ -381,119 +996,513 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
+  <!-- Sidebar (Dedicated to Cohort Selection & Custom Testing) -->
   <aside id="sidebar">
     <div class="sidebar-header">
       <h2>🧠 Clinical AI Co-Pilot</h2>
-      <p>DTU Final Year Project (GP178) | Actigraphy</p>
+      <p>DTU BTP GP178 | Actigraphy Diagnostics</p>
       <div class="search-box">
-        <input type="text" id="search-input" placeholder="Search participant (e.g. condition_1)...">
+        <input type="text" id="search-input" placeholder="Search patient ID, category, cohort...">
       </div>
       <div class="filter-pills">
-        <div class="pill active" onclick="filterCohort('all', this)">All (55)</div>
-        <div class="pill" onclick="filterCohort('condition', this)">Condition (23)</div>
-        <div class="pill" onclick="filterCohort('control', this)">Control (32)</div>
+        <div class="pill active" onclick="filterPatientCohort('all', this)">All (65)</div>
+        <div class="pill" onclick="filterPatientCohort('test', this)">Tests (10)</div>
+        <div class="pill" onclick="filterPatientCohort('condition', this)">Condition (29)</div>
+        <div class="pill" onclick="filterPatientCohort('control', this)">Control (36)</div>
       </div>
-      <button class="btn-new-patient" onclick="openUploadModal()">➕ Test New Patient Data</button>
+      <button class="btn-new-patient" onclick="openUploadModal()">➕ Test Custom CSV</button>
     </div>
     <div id="patient-list">
-      <!-- Injected via JavaScript -->
+      <!-- Injected via JavaScript (All Patients: 10 Tests + 55 Benchmark) -->
     </div>
   </aside>
 
-  <!-- Main Content -->
+  <!-- Main Content Area -->
   <main id="main-content">
+    
+    <!-- Top Bar with Navigation Tabs -->
     <header class="top-bar">
       <div class="top-title">
         <h1>Psychiatric Clinical Decision Support System</h1>
-        <span>Multimodal Feature Fusion & Temporal Transformer Architecture</span>
+        <span>DTU CSE Final Year Project (GP178) | Supervisor: Dr. Anshika Arora</span>
       </div>
+
+      <!-- Navigation Links -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" id="tab-btn-console" onclick="switchView('console')">
+          🔬 Active Clinical Console
+        </button>
+        <button class="nav-tab-btn" id="tab-btn-challenge" onclick="switchView('challenge')">
+          🎯 Blind Viva Challenge
+        </button>
+        <button class="nav-tab-btn" id="tab-btn-awareness" onclick="switchView('awareness')">
+          💚 Depression Awareness & Helplines
+        </button>
+      </nav>
+
+      <!-- Global Validation Metrics & Report Export -->
       <div class="top-stats">
-        <div class="stat-pill">55-Fold LOSO Accuracy: <strong>92.73% (51/55)</strong></div>
+        <div class="stat-pill">55-Fold LOSO: <strong>92.73%</strong></div>
         <div class="stat-pill">ROC-AUC: <strong>0.9470</strong></div>
-        <div class="stat-pill">Sensitivity: <strong>91.30%</strong></div>
+        <button type="button" class="btn-action" style="padding: 6px 12px; font-size: 0.74rem;" onclick="exportClinicalReport()">🖨️ Export Report</button>
       </div>
     </header>
 
-    <div class="dashboard-container">
-      <!-- Patient Banner -->
-      <section class="patient-banner">
-        <div class="banner-info">
-          <h2 id="disp-patient-id">Select a Patient</h2>
-          <div class="banner-meta">
-            <span id="disp-cohort">Cohort: —</span>
-            <span id="disp-age">Age: —</span>
-            <span id="disp-gender">Gender: —</span>
-            <span id="disp-madrs">MADRS Score: —</span>
+    <!-- VIEW 1: ACTIVE CLINICAL CONSOLE (DEFAULT) -->
+    <div id="view-console" class="view-section active">
+      <div class="dashboard-container">
+        <!-- Patient Banner -->
+        <section class="patient-banner">
+          <div class="banner-info">
+            <h2 id="disp-patient-id">Select a Patient</h2>
+            <div class="banner-meta">
+              <span id="disp-cohort">Cohort: —</span>
+              <span id="disp-category">Subtype: —</span>
+              <span id="disp-age">Age: —</span>
+              <span id="disp-gender">Gender: —</span>
+              <span id="disp-madrs">MADRS Score: —</span>
+            </div>
           </div>
-        </div>
-        <div class="banner-risk">
-          <div id="disp-risk-badge" class="badge badge-high">—</div>
-          <div id="disp-prob" class="risk-score">—%</div>
-          <span style="font-size:0.75rem; color:var(--text-muted)">Multimodal AI Probability</span>
-        </div>
-      </section>
+          <div class="banner-risk">
+            <div id="disp-risk-badge" class="badge badge-high">—</div>
+            <div id="disp-prob" class="risk-score">—%</div>
+            <span style="font-size:0.75rem; color:var(--text-muted)">Multimodal AI Depression Probability</span>
+          </div>
+        </section>
 
-      <!-- Digital Biomarker Metric Cards -->
-      <section class="biomarker-grid">
-        <div class="bio-box">
-          <div class="bio-name">Daytime Sedentary Ratio (Rank #1)</div>
-          <div id="disp-sed-val" class="bio-val">—%</div>
-          <div id="disp-sed-dev" class="bio-dev">—</div>
-        </div>
-        <div class="bio-box">
-          <div class="bio-name">M10 Daytime Peak Vigor (Rank #3)</div>
-          <div id="disp-m10-val" class="bio-val">—</div>
-          <div id="disp-m10-dev" class="bio-dev">—</div>
-        </div>
-        <div class="bio-box">
-          <div class="bio-name">Median Motor Activity (Rank #4)</div>
-          <div id="disp-med-val" class="bio-val">— counts/min</div>
-          <div id="disp-med-dev" class="bio-dev">—</div>
-        </div>
-        <div class="bio-box">
-          <div class="bio-name">Nocturnal Mean Activity (Rank #2)</div>
-          <div id="disp-noct-val" class="bio-val">— counts/min</div>
-          <div id="disp-noct-dev" class="bio-dev">—</div>
-        </div>
-      </section>
+        <!-- Multimodal Dual-Fusion Architecture Consensus Bar -->
+        <section class="consensus-bar">
+          <div class="consensus-title">
+            <span>⚡ Multimodal Dual-Fusion Architecture Breakdown & Agreement</span>
+            <span id="disp-consensus-badge" class="consensus-badge badge-high">Concordant High Confidence</span>
+          </div>
+          <div class="consensus-branches">
+            <div class="branch-card">
+              <span class="branch-label">Branch 1: Statistical Ensemble (15 Actigraphy Biometrics)</span>
+              <div class="branch-val"><span id="disp-prob-stat">—%</span> (Random Forest / GBDT)</div>
+            </div>
+            <div class="branch-card">
+              <span class="branch-label">Branch 2: Deep Learning (Raw Temporal 1D-CNN + Transformer)</span>
+              <div class="branch-val"><span id="disp-prob-dl">—%</span> (1D-CNN + Self-Attention)</div>
+            </div>
+            <div class="branch-card fusion">
+              <span class="branch-label">Fusion Gate: Calibrated Soft-Voting Meta-Ensemble</span>
+              <div class="branch-val"><span id="disp-prob-fusion">—%</span> (55-Fold LOSO: 92.73% CV)</div>
+            </div>
+          </div>
+        </section>
 
-      <!-- Charts Row -->
-      <section class="charts-grid">
-        <!-- 24-Hour Waveform Chart -->
-        <div class="card">
+        <!-- Digital Biomarker Metric Cards -->
+        <section class="biomarker-grid">
+          <div class="bio-box">
+            <div class="bio-name">Daytime Sedentary Ratio (Rank #1)</div>
+            <div id="disp-sed-val" class="bio-val">—%</div>
+            <div id="disp-sed-dev" class="bio-dev">—</div>
+          </div>
+          <div class="bio-box">
+            <div class="bio-name">M10 Daytime Peak Vigor (Rank #3)</div>
+            <div id="disp-m10-val" class="bio-val">—</div>
+            <div id="disp-m10-dev" class="bio-dev">—</div>
+          </div>
+          <div class="bio-box">
+            <div class="bio-name">Median Motor Activity (Rank #4)</div>
+            <div id="disp-med-val" class="bio-val">— c/m</div>
+            <div id="disp-med-dev" class="bio-dev">—</div>
+          </div>
+          <div class="bio-box">
+            <div class="bio-name">Nocturnal Mean Activity (Rank #2)</div>
+            <div id="disp-noct-val" class="bio-val">— c/m</div>
+            <div id="disp-noct-dev" class="bio-dev">—</div>
+          </div>
+        </section>
+
+        <!-- Charts Row -->
+        <section class="charts-grid">
+          <!-- 24-Hour Waveform Chart -->
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <span>24-Hour Diurnal Motor Activity Waveform</span>
+                <span class="sub">Patient Continuous Activity vs. Healthy Control Baseline</span>
+              </div>
+              <div class="chart-view-toggle">
+                <button type="button" class="btn-toggle active" id="btn-chart-linear" onclick="setWaveformChartType('line')">📈 Cartesian Line</button>
+                <button type="button" class="btn-toggle" id="btn-chart-radar" onclick="setWaveformChartType('radar')">🧭 Polar Chronogram (Clock)</button>
+              </div>
+            </div>
+
+            <!-- Diurnal Day Player & Scrubber -->
+            <div class="diurnal-player-bar">
+              <button type="button" id="btn-play-cycle" class="btn-play" onclick="toggleCyclePlayback()">▶ Play 24h Cycle</button>
+              <div class="time-scrubber-wrapper">
+                <input type="range" id="hour-scrubber" min="0" max="23" value="12" step="1" oninput="scrubHour(this.value)">
+                <div class="scrubber-ticks">
+                  <span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>23:00</span>
+                </div>
+              </div>
+              <div id="disp-active-hour" class="active-hour-pill">☀️ 12:00 (Solar Midday)</div>
+            </div>
+
+            <div style="height: 250px; position:relative;">
+              <canvas id="waveformChart"></canvas>
+            </div>
+
+            <!-- Dynamic Hourly Inspector Readout -->
+            <div id="hourly-inspector-bar" class="hourly-readout">
+              <span id="insp-hour">Hour 12:00</span> | 
+              <span id="insp-patient">Patient: — c/m</span> vs <span id="insp-ctrl">Normal: — c/m</span> (<span id="insp-diff" class="dev-bad">—%</span>) | 
+              <span id="insp-attn">Attention: —%</span> | 
+              <span id="insp-pheno" style="color:var(--warning); font-style:italic;">Midday Vigor State</span>
+            </div>
+          </div>
+
+          <!-- Transformer Attention Weights -->
+          <div class="card">
+            <div class="card-title">
+              <span>Temporal Transformer Self-Attention</span>
+              <span class="sub">Hourly Salience Weight (%)</span>
+            </div>
+            <div style="height: 330px;">
+              <canvas id="attentionChart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- DIGITAL TWIN: CIRCADIAN INTERVENTION & REMISSION SIMULATOR -->
+        <section class="card sim-card">
           <div class="card-title">
-            <span>24-Hour Diurnal Motor Activity Waveform</span>
-            <span class="sub">Patient Recording vs. Healthy Control Baseline</span>
+            <div>
+              <span style="color:#10b981; font-size:1.05rem;">🧪 Digital Twin: Circadian Intervention & Remission Simulator</span>
+              <span class="sub" style="display:block; margin-top:2px;">Simulate clinical interventions in real time to observe predicted biological recovery trajectories.</span>
+            </div>
+            <button type="button" class="btn-reset-sim" onclick="resetSimulator()">🔄 Reset to Baseline</button>
           </div>
-          <div style="height: 250px;">
-            <canvas id="waveformChart"></canvas>
-          </div>
-        </div>
 
-        <!-- Transformer Attention Weights -->
-        <div class="card">
+          <div class="sim-grid">
+            <!-- Left: Intervention Controls -->
+            <div class="sim-controls">
+              <div class="sim-group-title">Prescribe Clinical Chronotherapeutic Interventions:</div>
+              
+              <label class="sim-toggle">
+                <input type="checkbox" id="sim-phototherapy" onchange="updateSimulation()">
+                <div class="sim-text">
+                  <strong>💡 Morning Bright Light Phototherapy (10,000 Lux @ 07:30)</strong>
+                  <span>Anchors master SCN clock; phase-advances diurnal rhythm (+95 c/m morning vigor)</span>
+                </div>
+              </label>
+
+              <label class="sim-toggle">
+                <input type="checkbox" id="sim-walk" onchange="updateSimulation()">
+                <div class="sim-text">
+                  <strong>🚶 Scheduled Behavioral Activation Walk (30 min @ 15:00)</strong>
+                  <span>Disrupts prolonged post-prandial sedentary immobility (+160 c/m afternoon activity)</span>
+                </div>
+              </label>
+
+              <label class="sim-toggle">
+                <input type="checkbox" id="sim-cbti" onchange="updateSimulation()">
+                <div class="sim-text">
+                  <strong>📵 Digital Sunset & Strict CBT-I Sleep Window (Screens Off @ 21:30)</strong>
+                  <span>Suppresses nocturnal cognitive hyperarousal (-65% restlessness at 01:00–05:00)</span>
+                </div>
+              </label>
+
+              <label class="sim-toggle">
+                <input type="checkbox" id="sim-pharm" onchange="updateSimulation()">
+                <div class="sim-text">
+                  <strong>💊 Chronobiotic Phase Stabilizer (Melatonergic / SSRI Adjunct)</strong>
+                  <span>Amplifies master diurnal-nocturnal contrast amplitude ratio</span>
+                </div>
+              </label>
+
+              <div class="sim-slider-row">
+                <div style="flex:1;">
+                  <label for="sim-slider-sed">Sedentary Immobility Reduction:</label>
+                  <input type="range" id="sim-slider-sed" min="0" max="40" value="0" step="5" oninput="updateSimulation()">
+                  <span id="disp-slider-sed-val" class="slider-val">0%</span>
+                </div>
+                <div style="flex:1;">
+                  <label for="sim-slider-vig">Daytime Peak Vigor Boost:</label>
+                  <input type="range" id="sim-slider-vig" min="0" max="50" value="0" step="5" oninput="updateSimulation()">
+                  <span id="disp-slider-vig-val" class="slider-val">0%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Simulated Outcome Panel -->
+            <div class="sim-results">
+              <div class="sim-results-header">
+                <div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">Current Patient Risk</div>
+                  <div id="sim-base-prob" style="font-size:1.3rem; font-weight:700; color:var(--danger);">—%</div>
+                </div>
+                <div style="font-size:1.8rem; color:var(--text-muted);">➔</div>
+                <div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">Projected Remission Trajectory</div>
+                  <div id="sim-proj-prob" style="font-size:1.6rem; font-weight:800; color:#10b981;">—%</div>
+                </div>
+              </div>
+
+              <div id="sim-delta-badge" class="sim-delta-badge">
+                Δ 0.0% Risk Shift | Baseline
+              </div>
+
+              <div id="sim-prognosis-text" class="sim-prognosis-text">
+                Select one or more chronotherapeutic interventions above to simulate biological recovery trajectories and observe predicted remission probability.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Generative AI Consultation Memo -->
+        <section class="card">
           <div class="card-title">
-            <span>Temporal Transformer Self-Attention</span>
-            <span class="sub">Hourly Salience Weight (%)</span>
+            <span>Generative AI Psychiatric Consultation Memo</span>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-action" onclick="copyMemo()">📋 Copy Clinical Memo</button>
+              <button class="btn-action" style="background:#0284c7;" onclick="exportClinicalReport()">🖨️ Print Full Medical Note</button>
+            </div>
           </div>
-          <div style="height: 250px;">
-            <canvas id="attentionChart"></canvas>
+          <div id="disp-memo" class="memo-content">
+            Loading clinical diagnostic consultation note...
           </div>
-        </div>
-      </section>
-
-      <!-- Generative AI Consultation Memo -->
-      <section class="card">
-        <div class="card-title">
-          <span>Generative AI Psychiatric Consultation Memo</span>
-          <button class="btn-action" onclick="copyMemo()">📋 Copy Clinical Memo</button>
-        </div>
-        <div id="disp-memo" class="memo-content">
-          Loading clinical diagnostic consultation note...
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
+
+    <!-- VIEW 2: BLIND VIVA DIAGNOSTIC CHALLENGE -->
+    <div id="view-challenge" class="view-section">
+      <div class="challenge-container">
+        
+        <div class="challenge-header">
+          <div>
+            <h2>🎯 Blind Actigraphy Diagnostic Challenge (Viva Defense Mode)</h2>
+            <p>Evaluate an unlabelled patient actigraphy waveform and raw digital biomarkers without seeing their diagnosis. Make your clinical determination and benchmark against the Multimodal AI Ensemble.</p>
+          </div>
+          <div class="challenge-stats">
+            <div class="stat-pill">Score: <strong id="quiz-score">0 / 0</strong> (<span id="quiz-acc">0%</span>)</div>
+            <button type="button" class="btn-action" onclick="loadNewBlindChallenge()">🎲 Next Blind Case</button>
+          </div>
+        </div>
+
+        <div class="challenge-body">
+          <!-- Masked Patient Banner -->
+          <div class="patient-banner" style="border-color:#38bdf8;">
+            <div class="banner-info">
+              <h2 id="blind-patient-title">🔍 Blind Case #1 (Demographics: Age 45-49 • Female)</h2>
+              <div class="banner-meta">
+                <span>Actigraphy Duration: 7 Full Days (10,080 continuous minutes)</span>
+                <span>Recording Device: MotionWatch 8 CamNtech</span>
+                <span style="color:var(--warning);">Clinical Status: [MASKED FOR BLIND EVALUATION]</span>
+              </div>
+            </div>
+            <div class="banner-risk">
+              <div class="badge badge-mod" style="font-size:0.85rem;">🔒 MASKED VIVA MODE</div>
+              <span style="font-size:0.75rem; color:var(--text-muted)">Select your clinical diagnosis below</span>
+            </div>
+          </div>
+
+          <!-- Blind Biomarker Grid -->
+          <div class="biomarker-grid" style="margin-top:16px;">
+            <div class="bio-box">
+              <div class="bio-name">Daytime Sedentary Ratio</div>
+              <div id="blind-sed-val" class="bio-val">—%</div>
+            </div>
+            <div class="bio-box">
+              <div class="bio-name">M10 Daytime Peak Vigor</div>
+              <div id="blind-m10-val" class="bio-val">—</div>
+            </div>
+            <div class="bio-box">
+              <div class="bio-name">Median Motor Activity</div>
+              <div id="blind-med-val" class="bio-val">— c/m</div>
+            </div>
+            <div class="bio-box">
+              <div class="bio-name">Nocturnal Mean Activity</div>
+              <div id="blind-noct-val" class="bio-val">— c/m</div>
+            </div>
+          </div>
+
+          <!-- Blind Waveform Chart -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-title">
+              <span>Masked 24-Hour Diurnal Motor Activity Waveform</span>
+              <span class="sub">Patient Recording (Cyan) vs Healthy Control Reference Norm (Dashed Gray)</span>
+            </div>
+            <div style="height: 250px;">
+              <canvas id="blindWaveformChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Interactive Diagnostic Choice Buttons -->
+          <div class="quiz-options-card" style="margin-top:16px;">
+            <h3 style="font-size:1.05rem; margin-bottom:12px; color:var(--text);">🩺 Select Your Clinical Diagnostic Assessment:</h3>
+            <div class="quiz-btn-grid">
+              <button type="button" class="btn-quiz-option" onclick="submitBlindDiagnosis('melancholic')">
+                <span class="q-opt-title">A. Melancholic Retardation</span>
+                <span class="q-opt-desc">Pervasive diurnal motor blunting, severe daytime immobility, early-morning awakening.</span>
+              </button>
+              <button type="button" class="btn-quiz-option" onclick="submitBlindDiagnosis('agitated')">
+                <span class="q-opt-title">B. Agitated / Bipolar Mixed Episode</span>
+                <span class="q-opt-desc">Erratic nocturnal restlessness, motor tension bursts exceeding normal daytime levels.</span>
+              </button>
+              <button type="button" class="btn-quiz-option" onclick="submitBlindDiagnosis('atypical')">
+                <span class="q-opt-title">C. Atypical Phase-Delayed Depression</span>
+                <span class="q-opt-desc">Severe morning sleep inertia (08:00–11:00 collapse), delayed evening acrophase shift.</span>
+              </button>
+              <button type="button" class="btn-quiz-option" onclick="submitBlindDiagnosis('control')">
+                <span class="q-opt-title">D. Healthy Euthymic Control</span>
+                <span class="q-opt-desc">Consolidated restorative sleep architecture and robust daytime physical vigor.</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Result Reveal Panel (Hidden until choice made) -->
+          <div id="quiz-reveal-panel" class="quiz-reveal-panel" style="display:none;">
+            <div id="quiz-verdict-banner" class="quiz-verdict-banner">
+              <span id="quiz-verdict-icon">✅</span>
+              <span id="quiz-verdict-title">DIAGNOSTIC MATCH!</span>
+            </div>
+            <div class="quiz-reveal-content">
+              <div class="quiz-meta-reveal">
+                <div>True Subject ID: <strong id="reveal-pid" style="color:var(--primary);">—</strong></div>
+                <div>True Clinical Category: <strong id="reveal-category">—</strong></div>
+                <div>Actual MADRS Severity: <strong id="reveal-madrs">—</strong></div>
+                <div>Multimodal AI Probability: <strong id="reveal-prob" style="color:var(--danger); font-size:1.1rem;">—%</strong></div>
+              </div>
+              <div id="reveal-explanation" class="quiz-explanation">
+                Loading clinical rationale...
+              </div>
+              <div style="display:flex; gap:12px; margin-top:14px; flex-wrap:wrap;">
+                <button type="button" class="btn-action" onclick="inspectBlindPatientInConsole()">🔬 Inspect Full Patient in Active Console</button>
+                <button type="button" class="btn-sample" style="padding:8px 16px;" onclick="loadNewBlindChallenge()">🎲 Test Another Blind Patient</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VIEW 4: DEPRESSION AWARENESS & EMERGENCY HELPLINES -->
+    <div id="view-awareness" class="view-section">
+      <div class="awareness-container">
+        
+        <!-- Hero Header -->
+        <div class="awareness-hero">
+          <h2>💚 Mental Health Awareness, Clinical Guidance & 24/7 Crisis Support</h2>
+          <p>
+            Depression is a treatable biological and psychological condition, not a personal weakness. 
+            By capturing passive 24-hour motor actigraphy, our clinical decision support system detects objective physiological shifts 
+            in circadian rhythms and psychomotor tone. If you or someone you know is experiencing distress, confidential professional support is available 24/7.
+          </p>
+        </div>
+
+        <!-- Emergency Helplines Section -->
+        <div>
+          <h2 style="font-size:1.25rem; margin-bottom:14px; color:var(--text); display:flex; align-items:center; gap:8px;">
+            🚨 24/7 Emergency Mental Health Helplines (Immediate Support)
+          </h2>
+          <div class="helpline-grid">
+            
+            <!-- Tele-MANAS -->
+            <div class="helpline-card primary-line">
+              <span class="helpline-badge" style="background:rgba(56,189,248,0.2); color:var(--primary);">Govt. of India Official</span>
+              <h3>Tele-MANAS (National Mental Health Helpline)</h3>
+              <div class="helpline-num">14416 / 1800-891-4416</div>
+              <p class="helpline-desc">Free, comprehensive, 24/7 mental health counseling across India in 20+ languages by trained clinical psychologists and psychiatrists.</p>
+              <a href="tel:14416" class="btn-call">📞 Call 14416</a>
+            </div>
+
+            <!-- KIRAN -->
+            <div class="helpline-card primary-line">
+              <span class="helpline-badge" style="background:rgba(56,189,248,0.2); color:var(--primary);">Ministry of Social Justice</span>
+              <h3>KIRAN Mental Health Rehabilitation</h3>
+              <div class="helpline-num">1800-599-0019</div>
+              <p class="helpline-desc">24/7 toll-free helpline providing psychological support, mental health rehabilitation, and crisis counseling across India.</p>
+              <a href="tel:18005990019" class="btn-call">📞 Call 1800-599-0019</a>
+            </div>
+
+            <!-- Vandrevala Foundation -->
+            <div class="helpline-card priority">
+              <span class="helpline-badge" style="background:rgba(244,63,94,0.2); color:var(--danger);">24/7 Crisis Helpline</span>
+              <h3>Vandrevala Foundation Helpline</h3>
+              <div class="helpline-num">+91 9999 666 555</div>
+              <p class="helpline-desc">24/7 free confidential psychological counseling and emotional crisis support by trained professionals across India.</p>
+              <a href="tel:+919999666555" class="btn-call danger">📞 Call 9999-666-555</a>
+            </div>
+
+            <!-- AASRA -->
+            <div class="helpline-card priority">
+              <span class="helpline-badge" style="background:rgba(244,63,94,0.2); color:var(--danger);">Suicide Prevention</span>
+              <h3>AASRA Suicide Prevention & Crisis Line</h3>
+              <div class="helpline-num">+91 98204 66726</div>
+              <p class="helpline-desc">24-hour voluntary non-judgmental crisis intervention for individuals experiencing suicidal distress or severe emotional pain.</p>
+              <a href="tel:+919820466726" class="btn-call danger">📞 Call 98204-66726</a>
+            </div>
+
+            <!-- Snehi (Delhi / NCR) -->
+            <div class="helpline-card">
+              <span class="helpline-badge" style="background:rgba(168,85,247,0.2); color:var(--purple);">Delhi NCR Regional</span>
+              <h3>Snehi Mental Health Care</h3>
+              <div class="helpline-num">+91 95822 08181</div>
+              <p class="helpline-desc">Specialized psychological and emotional support center based in Delhi NCR for young adults, students, and families.</p>
+              <a href="tel:+919582208181" class="btn-call">📞 Call 95822-08181</a>
+            </div>
+
+            <!-- National Emergency 112 -->
+            <div class="helpline-card">
+              <span class="helpline-badge" style="background:rgba(245,158,11,0.2); color:var(--warning);">Emergency Services</span>
+              <h3>National Emergency Services (India)</h3>
+              <div class="helpline-num">112</div>
+              <p class="helpline-desc">Universal emergency helpline across India for immediate medical, police, or crisis response dispatch.</p>
+              <a href="tel:112" class="btn-call">📞 Call 112</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Educational Information Grid -->
+        <div class="info-grid">
+          
+          <!-- Understanding Depression Subtypes -->
+          <div class="info-card">
+            <h3>🧠 Clinical Depression Subtypes</h3>
+            <ul>
+              <li><strong>Melancholic Depression:</strong> Pervasive psychomotor retardation, profound lack of daytime vigor, prolonged immobility bouts, and early-morning awakening.</li>
+              <li><strong>Agitated / Bipolar Mixed:</strong> High motor restlessness, physical tension, nocturnal insomnia, and erratic movement spikes above baseline.</li>
+              <li><strong>Atypical Depression:</strong> Delayed sleep-wake schedule, severe morning sleep inertia (08:00–11:00), afternoon crashes, and leaden fatigue.</li>
+              <li><strong>Euthymia:</strong> Normal, healthy balance of circadian motor rhythms and restorative sleep.</li>
+            </ul>
+          </div>
+
+          <!-- Recognizing Warning Signs -->
+          <div class="info-card">
+            <h3>⚠️ Recognizing Warning Signs</h3>
+            <ul>
+              <li>Persistent low mood, sadness, emptiness, or pervasive loss of interest (anhedonia).</li>
+              <li>Significant change in movement: noticeable slowing down or restless pacing.</li>
+              <li>Severe sleep disruption: inability to fall asleep, or waking at 03:00 AM unable to return to sleep.</li>
+              <li>Feelings of worthlessness, intense cognitive fog, or thoughts that life is not worth living.</li>
+              <li>Withdrawal from family, studies, work, and essential daily activities.</li>
+            </ul>
+          </div>
+
+          <!-- Evidence-Based Measures -->
+          <div class="info-card">
+            <h3>🛡️ Evidence-Based Measures & Interventions</h3>
+            <ul>
+              <li><strong>Morning Light Exposure:</strong> 30–45 minutes of morning sunlight or 10,000 lux phototherapy at 07:30 AM to anchor the master biological clock.</li>
+              <li><strong>Behavioral Activation:</strong> Scheduled daily 20-minute brisk walks at 09:00 AM and 14:30 PM to interrupt prolonged sedentary bouts.</li>
+              <li><strong>Strict Sleep Window (CBT-I):</strong> Maintain consistent bedtime and rise times even on weekends; avoid screens 2 hours before bed.</li>
+              <li><strong>Professional Consultation:</strong> Schedule an evaluation with a psychiatrist or clinical psychologist for structured MADRS/HAM-D assessment and treatment planning.</li>
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
   <!-- Modal: Test New Patient -->
@@ -544,8 +1553,10 @@
       <div class="form-group">
         <label style="font-size:0.75rem;">Or Quick-Test with Preloaded Cohort Sample:</label>
         <div class="quick-sample-btns">
-          <button type="button" class="btn-sample" onclick="loadSampleData('condition')">⚡ Sample Depressed Patient</button>
-          <button type="button" class="btn-sample" onclick="loadSampleData('control')">⚡ Sample Healthy Control</button>
+          <button type="button" class="btn-sample" onclick="loadSampleData('retarded')">⚡ Melancholic Retardation</button>
+          <button type="button" class="btn-sample" onclick="loadSampleData('agitated')">⚡ Agitated Mixed</button>
+          <button type="button" class="btn-sample" onclick="loadSampleData('atypical')">⚡ Atypical Phase-Delayed</button>
+          <button type="button" class="btn-sample" onclick="loadSampleData('active')">⚡ Healthy Active Control</button>
         </div>
       </div>
 
@@ -558,6 +1569,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2.4"></script>
 </body>
 </html>
